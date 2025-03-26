@@ -1,0 +1,283 @@
+#include "MyENC.h"
+
+/*********************************************************************************************************************************
+   @brief   Class contructor.
+   @brief   References to structures are set.
+   @param   lcdEncInterface Referance to LCD class which operate display
+   @param   inFirstScr First screen number
+   @param   inLastScr Last screen number
+   @param   inParScrNum Screen with paramater config mode
+   @note    void
+*/
+RottaryButton::RottaryButton(LCD_ENC_interface_t& lcdEncInterface, uint8_t inFirstScr, uint8_t inLastScr, uint8_t inParScrNum):
+    refLcdEncInterface(lcdEncInterface)
+{
+    firstScreenID   = inFirstScr;
+    lastScreenID    = inLastScr;
+    currentID       = firstScreenID;
+    paramScrNum     = inParScrNum;
+    exitEdit        = false;
+
+    buttonDebounceDelay = MY_ENC_TIME_DEBOUNCE;
+    buttonLongPress     = MY_ENC_TIME_LONGPRESS;
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @brief    Class deconstructor
+*/
+RottaryButton::~RottaryButton(void)
+{;}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @brief   Cyclid Wheel reading. This method need to be called in timer interrupt
+   @param   inA Rotary Wheel input A
+   @param   inB Rotary Wheel input B
+   @return  Current screen number
+   @note    Simple cyclic/scaning function
+*/
+uint8_t RottaryButton::WheelRotation(uint8_t& refInA, uint8_t& refInB)
+{
+   static uint8_t sLastA, sLastB;
+   uint8_t tRotDirection = 0x00;
+
+    if(refInA != refInB)
+    {
+        if(refInA != sLastA)       // +1 Increment
+        {   tRotDirection = 0x01;}
+        else if(refInB != sLastB)  // -1 Decrement
+        {   tRotDirection = 0xFF;}
+        else{;}
+    }
+    else{;}// +0 No rotation
+
+    sLastA = refInA;
+    sLastB = refInB;
+
+    return tRotDirection;
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @name    ButtonDebounce
+   @brief   Cyclid reading. This method need to be called in timer interrupt. There is 4 states of button.
+   @param   inButton Input from button
+   @return  Code of presed type. This is one cycle sygnal 
+   @note    To work properly timer interupt and need to be configured. Check timer interrupt config.
+*/
+uint8_t RottaryButton::ButtonDebounce(uint8_t inButton)
+{
+    static uint8_t sEventState;
+    static uint8_t sCountDB;
+    static uint8_t sCountLongPress;
+
+    switch (sEventState)
+    {
+    case _ENC_STATE_RESET: // Reset state
+        if(inButton == LOW) 
+        {   sEventState  = _ENC_STATE_STABLEOFF;}
+        else{;}
+        break;
+
+    case _ENC_STATE_STABLEOFF: // Stable relised button. Default state
+        if(inButton == HIGH)
+        {// Button is presed and rising edge
+            sEventState = _ENC_STATE_ON_DB;
+            sCountDB = 0x00;
+            return _ENC_STATE_RISING; // Only present when button is presed
+        }
+        else{;}
+        break;
+
+    case _ENC_STATE_ON_DB: // Button debouncing delay
+        if(sCountDB < buttonDebounceDelay)  
+        {   sCountDB++;}
+        else
+        {
+            sEventState = _ENC_STATE_STABLEON;
+            sCountLongPress = 0x00;
+        }
+        break;
+
+    case _ENC_STATE_STABLEON: // Stable presed. waiting for long press or relise.
+        if(inButton == LOW)
+        {// Releesing button
+            sEventState = _ENC_STATE_OFF_DB;
+            sCountDB = 0x00;
+            return _ENC_STATE_FALLING;
+        }
+        else //(inButton == HIGH)
+        {// State when button is pressed
+            if(sCountLongPress < buttonDebounceDelay)   
+            {   sCountLongPress++;}
+            else    
+            {   return _ENC_STATE_LONGPRSS;}
+        }
+        break;
+
+    case _ENC_STATE_OFF_DB: // Button debouncing delay
+        if(sCountDB < buttonDebounceDelay)  
+        {   sCountDB++;}
+        else    
+        {   sEventState = _ENC_STATE_STABLEOFF;}
+        break;
+    
+    default: // Jump to reset state
+        sEventState  = _ENC_STATE_RESET;
+        break;
+    }
+    return sEventState;
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @brief   In adequate screen when button presed then edit parameters mode is ON
+   @param   inButton button press type
+   @return  Current mode type 
+*/
+uint8_t RottaryButton::ModeMenagment(uint8_t inbutton, uint8_t inPressType)
+{
+    static uint8_t sEditMode;
+    switch (sEditMode)
+    {
+    case _MODE_MENAG_READ: // Screen changing mode
+        if((inbutton == inPressType) && (currentID == paramScrNum))
+            sEditMode = _MODE_MENAG_WRITE;
+        else{;}
+        break;
+
+    case _MODE_MENAG_WRITE: // Parameters edit mode
+        if(inbutton == inPressType)
+            sEditMode = _MODE_MENAG_READ;
+        else{;}
+        break;
+    
+    default: // Dafault mode
+        sEditMode = _MODE_MENAG_READ;
+        break;
+    }
+    return sEditMode;
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @brief   Cyclid Wheel reading. This method need to be called in timer interrupt
+   @param   inRotDir Direction of rotation
+   @param   inButton State of button
+   @return  void
+   @note    Depend of turning change screen number 
+*/
+void RottaryButton::ScreanMenagment(uint8_t inRotDir, bool inButton)
+{
+    if(inRotDir == 0x01)         //+1
+    {
+        if(currentID < lastScreenID)
+        {   currentID++;}
+        else
+        {   currentID = lastScreenID;}
+    }
+    else if(inRotDir == 0xFF)    //-1
+    {
+        if(currentID > firstScreenID)
+        {   currentID--;}
+        else
+        {   currentID = firstScreenID;}
+    }
+    else{;}
+    refLcdEncInterface.numberOfScreen = currentID;
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+   @brief   NOT FINISHED!! Change of min, max ranges
+   @param   inRotDir Direction of rotation
+   @param   inButton State of button
+   @return  void
+   @note    This varibale are conected to data display bo LCD
+            NOT FINISHED!!
+*/
+void RottaryButton::ParametersMenagment(uint8_t inRotDir, uint8_t inButton)
+{
+    static uint8_t sMenuState = 0x00;
+    switch (sMenuState)
+    {
+    case _ENC_PARAM_SWIPETHROUGHT:// Swipe throught parameters
+        if(inRotDir == 0x01)
+        {   refLcdEncInterface.numberOfParametr++;}
+        else if(inRotDir == 0xFF)
+            refLcdEncInterface.numberOfParametr--;
+        else{;}
+        if(inButton == true)
+            sMenuState = 0x22; // Go to change limit value
+        else{;}
+        return;
+
+    case 0x22:// Change choisen parameter
+        if(inRotDir == 0x01)
+            refLcdEncInterface.limitValuesOfparametr++;
+        else if(inRotDir == 0xFF)
+            refLcdEncInterface.limitValuesOfparametr--;
+        else{;}
+        if(inButton == _ENC_STATE_RISING)
+            sMenuState = 0x33; 
+        else{;}
+        return;
+
+    case 0x33:
+        if(inRotDir == 0x01)
+            refLcdEncInterface.incOrDecCurentparameter++;
+        else if(inRotDir == 0xFF)
+            refLcdEncInterface.incOrDecCurentparameter--;
+        else{;}
+        if(inButton == _ENC_STATE_FALLING)
+        {
+            sMenuState = 0x11;
+        }
+        else if(inButton == _ENC_STATE_LONGPRSS)
+        {
+            sMenuState = 0x11;
+            exitEdit = true;
+        }
+        else{;}
+        return;
+    
+    default:
+        sMenuState = _ENC_PARAM_SWIPETHROUGHT;
+        break;
+    }
+}
+//================================================================================================================================
+
+/*********************************************************************************************************************************
+ * @name    InterruptCall
+ * @brief   Cycylical call inside interrupt
+ * @param   inA Input A
+ * @param   inB Input b 
+ * @param   inButt Button input
+ * @return  void
+ * @note    Menu menagment button call
+*/
+void RottaryButton::InterruptCall(uint8_t inA, uint8_t inB, uint8_t inButt)
+{
+    uint8_t rotDir, editMode;
+
+    rotDir = WheelRotation(inA, inB);
+    inButt = ButtonDebounce(inButt);
+
+    editMode = ModeMenagment(inButt, _ENC_STATE_LONGPRSS);    
+    switch (editMode)
+    {
+    case _MODE_MENAG_READ:
+        ScreanMenagment(rotDir, inButt);
+        break;
+
+    case _MODE_MENAG_WRITE:
+        //ParametersMenagment(rotDir, inButt);
+        break;
+    
+    default:
+        break;
+    }
+}
+//================================================================================================================================

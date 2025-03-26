@@ -1,0 +1,92 @@
+#include <stdint.h>
+#include <Arduino.h>
+#include <Adafruit_SSD1306.h>
+#include "CustomStructures.h"
+
+#ifndef _MY_LCD_H
+#define _MY_LCD_H
+
+// LCD configuration pin definitions
+#define LCD_DISP_RES 0x07U                 //  D5 - GPIO7 (Display Reset)
+#define LCD_CP5 0x05U                 //  CP5 (Reserve)- GPIO6
+#define LCD_CP6 0x06U
+
+#define LCD_SCREEN_WIDTH    0x80U // OLED display width, in pixels
+#define LCD_SCREEN_HEIGHT   0x40U // OLED display height, in pixels
+#define LCD_OLED_RESET      0x07U // Reset pin # (or -1 if sharing Arduino reset pin)
+
+// LCD I2C pin configuration data 
+#define I2C_PC4_SDA     18
+#define I2C_PC5_SCL     19
+
+// LCD SPI pin configuration data
+#define SPI_PB5_SCK     13
+#define SPI_PB4_MISO    12
+#define SPI_PB3_MOSI    11
+#define SPI_PB5_SS      10
+
+#define MY_LCD_MOVE_BACK       0x00U //editMode =0 - possible to move back
+#define MY_LCD_MARK_PARAM      0x01U //editMode =1 - mark parameter
+#define MY_LCD_MARK_MIN        0x02U //editMode =2 - mark min parameter
+#define MY_LCD_MARK_MAX        0x03U //editMode =3 - mark max parameter
+
+#define MY_LCD_NUMBER_OF_PAREMETER_FIRST 0x01
+#define MY_LCD_NUMBER_OF_PAREMETER_LAST  0x04
+
+/******************************************************************************************************
+ * @name    DisplayCanOnLcd
+ * @brief   Preparation data for display.
+ * @note    This class is using reference Adafruit_SSD1306&  to existing Class that make actual dispaly
+*/
+class DisplayCanOnLcd
+{
+private:
+    /******************************************
+    * Reference input data from other classes */
+    Adafruit_SSD1306&       RefMyDisplay;       // Adafruit LCD display initialized class
+    LCD_ENC_interface_t&    refLcdEncInterface; // Data from rottary button
+
+    /***********************************************
+    * Pointers to global decoded data from CAN buss*/
+    CanData1_t& refPackage1;
+    CanData2_t& refPackage2;
+    CanData3_t& refPackage3;
+    CanData4_t& refPackage4;
+    CanData5_t& refPackage5;
+    CanData6_t& refPackage6;
+    CanData7_t& refPackage7;
+    //================================================
+
+    void SetDisplayParamsRPM(int16_t inRPM, uint8_t ID);
+    void SetDisplayParamsIAT(int16_t inIAT, uint8_t ID);
+    void SetDisplayParamsTPS(int16_t inTPS, uint8_t ID);
+    void SetDisplayParamsMAP(int16_t inMAP, uint8_t ID);
+    void SetDisplayParamsAIN1(int16_t inAIN1, uint8_t ID);
+    void SetDisplayParamsVSPD(int16_t inVSPD, uint8_t ID);
+    void SetDisplayParamsOILT(int16_t inOILT, uint8_t ID);
+    void SetDisplayParamsOILP(int16_t inOILP, uint8_t ID);
+    void SetDisplayParamsFUELP(int16_t inFUELP, uint8_t ID);
+    void SetDisplayParamsCLT(int16_t inCLT, uint8_t ID);
+    void SetDisplayParamsLAMBDA(int16_t inLAMBDA, uint8_t ID);
+    void SetDisplayParamsAFR(int16_t inAFR, uint8_t ID);
+    void SetDisplayParamsEGT1(int16_t inEGT1, uint8_t ID);
+    void SetDisplayParamsEGT2(int16_t inEGt2, uint8_t ID);
+    void SetDisplayParamsBATT(int16_t inBATT, uint8_t ID);
+
+    void SetDisplayParameter(const String &name, int16_t inParam, uint8_t inX, uint8_t inY, uint8_t inSize);
+
+    void SetLinesForScr1(void);
+    void SetLinesForScr2(void);
+    void SetLinesForScr3(void);
+    void SetLinesForScr4(void);
+    void SetLinesForScr5(void);    
+    
+public:
+    DisplayCanOnLcd(Adafruit_SSD1306& inRefMyDisplay, LCD_ENC_interface_t& inRefLcdEncInterface, CanData1_t& inRefPackage1, CanData2_t& inRefPackage2, CanData3_t& inRefPackage3, CanData4_t& inRefPackage4, CanData5_t& inRefPackage5, CanData6_t& inRefPackage6, CanData7_t& inRefPackage7);
+    ~DisplayCanOnLcd(void);
+    
+    void CallDisplayScreens(uint8_t inScreen);
+    void CallDisplaySettings(void);
+};
+
+#endif //_MY_CAN_H

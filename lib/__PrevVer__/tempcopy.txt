@@ -1,0 +1,488 @@
+#include "MyCAN.h"
+/**************************************************************************/
+/*!
+   @brief   Class constructor
+   @param   pdata      Reference to outputdata. 
+*/
+/**************************************************************************/
+DecodeCANData::DecodeCANData(uint8_t ini)
+{
+    // pPackage1 = NULL;
+    // pPackage2 = NULL;
+    // pPackage3 = NULL;
+    // pPackage4 = NULL;
+    // pPackage5 = NULL;
+    // pPackage6 = NULL;
+    // pPackage7 = NULL;
+    ;
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Class dekonctructor
+   @param   pdata      Pointer to parameter type struture). 
+*/
+/**************************************************************************/
+DecodeCANData::~DecodeCANData(void)
+{;}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Check paremeter value is it is in min max range
+   @param   pdata      Pointer to parameter type struture). 
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::CheckValues(valueParameters_uint8_t* pdata)
+{
+    if(pdata->value == 0x00) 
+        {pdata->fault = MYCAN_ERROR_NO_DATA;}
+    else if(pdata->value <= pdata->min) 
+        {pdata->fault = MYCAN_ERROR_MIN;}
+    else if(pdata->value >= pdata->max) 
+        {pdata->fault = MYCAN_ERROR_MAX;}
+    else 
+        {pdata->fault = 0x00;}
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Check paremeter value is it is in min max range
+   @param   pdata      Pointer to parameter type struture). 
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::CheckValues(valueParameters_int16_t* pdata)
+{
+    if(pdata->value == 0x0000) 
+        {pdata->fault = MYCAN_ERROR_NO_DATA;}
+    else if(pdata->value <= pdata->min) 
+        {pdata->fault = MYCAN_ERROR_MIN;}
+    else if(pdata->value >= pdata->max) 
+        {pdata->fault = MYCAN_ERROR_MAX;}
+    else 
+        {pdata->fault = 0x00;}
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Check paremeter value is it is in min max range
+   @param   pdata      Pointer to parameter type struture). 
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::CheckValues(valueParameters_float_t* pdata)
+{
+    if(pdata->value <= pdata->min) 
+        {pdata->fault = MYCAN_ERROR_MIN;}
+    else if(pdata->value >= pdata->max) 
+        {pdata->fault = MYCAN_ERROR_MAX;}
+    else 
+        {pdata->fault = 0x00;}
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Copy data to other stucture
+   @param   pSRC Pointer to source data structure
+   @param   pDEST Pointer to destination data structure
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::MoveValues(valueParameters_uint8_t* pSRC, valueParameters_uint8_t* pDEST)
+{
+    pDEST->value = pSRC->value;
+    pDEST->max = pSRC->max;
+    pDEST->min = pSRC->min;
+    pDEST->fault = pSRC->fault;
+}
+//==================================================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Copy data to other stucture
+   @param   pSRC Pointer to source data structure
+   @param   pDEST Pointer to destination data structure
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::MoveValues(valueParameters_int16_t* pSRC, valueParameters_int16_t* pDEST)
+{
+    pDEST->value = pSRC->value;
+    pDEST->max = pSRC->max;
+    pDEST->min = pSRC->min;
+    pDEST->fault = pSRC->fault;
+}
+//==================================================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Copy data to other stucture
+   @param   pSRC Pointer to source data structure
+   @param   pDEST Pointer to destination data structure
+   @return  void
+   @note    Posible imputs: uint8_t, int16_t, float
+*/
+void DecodeCANData::MoveValues(valueParameters_float_t* pSRC, valueParameters_float_t* pDEST)
+{
+    pDEST->value = pSRC->value;
+    pDEST->max = pSRC->max;
+    pDEST->min = pSRC->min;
+    pDEST->fault = pSRC->fault;
+}
+//==================================================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Coppy data from structure to structure
+   @param   pSrcPtr Base pointer to source structure
+   @param   pDestPtr Base pointer to destination structure
+   @param   dataLenght Lenght data in byte. Use "sizeof()"
+   @return  void
+   @note    Double check data lenght
+*/
+void DecodeCANData::MoveData(uint8_t* pSrcPtr, uint8_t* pDestPtr, uint8_t dataLenght)
+{
+    uint8_t i;
+    for(i=0; i<dataLenght; i++)
+    {
+        *(pDestPtr + i) = *(pSrcPtr + i);
+    }
+}
+//==================================================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside pBuffer to valid parameters
+   @param   pBuffer[]   CAN data pBuffer
+   @return  void
+   @note    Custom for package 1
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage1(uint8_t* pBuffer)
+{
+    _canData1.RPM.value = (int16_t)((pBuffer[0] << 8) | (pBuffer[1] << 0));
+    _canData1.TPS.value = (pBuffer[2]);
+    _canData1.IAT.value = (pBuffer[3]);
+    _canData1.MAP.value = (int16_t)((pBuffer[4] << 8) | (pBuffer[5] << 0));
+    _canData1.VSPD.value = (int16_t)((pBuffer[6] << 8) | (pBuffer[7] << 0));
+
+    CheckValues(&(_canData1.RPM));
+    CheckValues(&(_canData1.TPS));
+    CheckValues(&(_canData1.IAT));
+    CheckValues(&(_canData1.MAP));
+    CheckValues(&(_canData1.VSPD));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside buffer to valid parameters
+   @param   buffer[]   CAN data buffer
+   @return  void
+   @note    Custom for package 2
+*/
+/**************************************************************************/
+void DecodeCANData:: DecodePackage2(uint8_t* pBuffer)
+{
+    _canData2.AIN1.value = (int16_t)((pBuffer[0] << 8) | (pBuffer[1] << 0));
+    _canData2.AIN2.value = (int16_t)((pBuffer[2] << 8) | (pBuffer[3] << 0));
+    _canData2.AIN3.value = (int16_t)((pBuffer[4] << 8) | (pBuffer[5] << 0));
+    _canData2.AIN4.value = (int16_t)((pBuffer[6] << 8) | (pBuffer[7] << 0));
+
+    CheckValues(&(_canData2.AIN1));
+    CheckValues(&(_canData2.AIN2));
+    CheckValues(&(_canData2.AIN3));
+    CheckValues(&(_canData2.AIN4));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside pBuffer to valid parameters
+   @param   pBuffer[]   CAN data pBuffer
+   @return  void
+   @note    Custom for package 3
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage3(uint8_t* pBuffer)
+{
+    _canData3.GPS_Speed.value   = (int16_t)((pBuffer[0] << 8) | (pBuffer[1] << 0));
+    _canData3.BARO.value        = (pBuffer[2]);
+    _canData3.OILT.value        = (pBuffer[3]);
+    _canData3.OILP.value        = (pBuffer[4] / 10);
+    _canData3.FUELP.value       = (pBuffer[5] / 10);
+    _canData3.CLT.value         = (int16_t)((pBuffer[6] << 8) | (pBuffer[7] << 0));
+
+    CheckValues(&(_canData3.GPS_Speed));
+    CheckValues(&(_canData3.BARO));
+    CheckValues(&(_canData3.OILT));
+    CheckValues(&(_canData3.OILP));
+    CheckValues(&(_canData3.FUELP));
+    CheckValues(&(_canData3.CLT));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside pBuffer to valid parameters
+   @param   pBuffer[]   CAN data pBuffer
+   @return  void
+   @note    Custom for package 4
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage4(uint8_t* pBuffer)
+{
+    _canData4.Ign_Angle.value  = (pBuffer[0]);
+    _canData4.Dwell.value      = (pBuffer[1]);
+    _canData4.Lambda.value     = (pBuffer[2]);
+    _canData4.AFR.value        = (pBuffer[3]);
+    _canData4.EGT_1.value      = (int16_t)((pBuffer[4] << 8) | (pBuffer[5] << 0));
+    _canData4.EGT_2.value      = (int16_t)((pBuffer[6] << 8) | (pBuffer[1] << 0));
+
+    CheckValues(&(_canData4.Lambda));
+    CheckValues(&(_canData4.AFR));
+    CheckValues(&(_canData4.EGT_1));
+    CheckValues(&(_canData4.EGT_2)); 
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside pBuffer to valid parameters
+   @param   pBuffer[]   CAN data pBuffer
+   @return  void
+   @note    Custom for package 5
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage5(uint8_t* pBuffer)
+{
+    _canData5.Gear.value    = (pBuffer[0]);
+    _canData5.ECU_Temp.value= (pBuffer[1]);
+    _canData5.Battery.value = (int16_t)((pBuffer[2] << 8) | (pBuffer[3] << 0));
+
+    CheckValues(&(_canData5.Gear));
+    CheckValues(&(_canData5.ECU_Temp));
+    CheckValues(&(_canData5.Battery));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside buffer to valid parameters
+   @param   buffer[]   CAN data buffer
+   @return  void
+   @note    Custom for package 6
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage6(uint8_t* pBuffer)
+{
+    _canData6.DBW_Pos.value     = (pBuffer[0]);
+    _canData6.DBW_Target.value  = (pBuffer[1]);
+    _canData6.TC_DRPM_RAW.value = (int16_t)((pBuffer[2] << 8) | (pBuffer[3] << 0));
+    _canData6.TC_DRPM.value     = (int16_t)((pBuffer[4] << 8) | (pBuffer[5] << 0));
+    _canData6.TC_TORQ_REDU.value= (pBuffer[6]);
+    _canData6.PIT_TRQ_REDU.value= (pBuffer[7]);
+
+    CheckValues(&(_canData6.DBW_Pos));
+    CheckValues(&(_canData6.DBW_Target));
+    CheckValues(&(_canData6.TC_DRPM_RAW));
+    CheckValues(&(_canData6.TC_DRPM));
+    CheckValues(&(_canData6.PIT_TRQ_REDU));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside buffer to valid parameters
+   @param   pBuffer[]   CAN data pBuffer
+   @return  void 
+   @note    Custom for package 7
+*/
+/**************************************************************************/
+void DecodeCANData::DecodePackage7(uint8_t* pBuffer)
+{
+    _canData7.AIN5.value = (int16_t)((pBuffer[0] << 8) | (pBuffer[1] << 0));
+    _canData7.AIN6.value = (int16_t)((pBuffer[2] << 8) | (pBuffer[3] << 0));
+    _canData7.OUT_FLAG1.value = (pBuffer[4]);
+    _canData7.OUT_FLAG2.value = (pBuffer[5]);
+    _canData7.OUT_FLAG3.value = (pBuffer[6]);
+    _canData7.OUT_FLAG4.value = (pBuffer[7]);
+
+    CheckValues(&(_canData7.AIN5));
+    CheckValues(&(_canData7.AIN6));
+    CheckValues(&(_canData7.OUT_FLAG1));
+    CheckValues(&(_canData7.OUT_FLAG2));
+    CheckValues(&(_canData7.OUT_FLAG3));
+    CheckValues(&(_canData7.OUT_FLAG4));
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   Decodes CAN data inside pBuffer to valid parameters
+   @param   void
+   @return  Can ID uint16_t that have been decoded
+   @note    When data comes it is decodec depend from ID
+*/
+void DecodeCANData::CallForReadCanData(CAN_data_t* pDataFromCan)
+{           
+    unsigned long tID;
+    tID = pDataFromCan->ID;
+    return;
+    switch (tID)
+    {
+        case MYCAN_CAN_ID_1: // Data1 decode and write to global data
+            DecodePackage1(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData1.IAT), &(pPackage1->IAT));
+                MoveValues(&(_canData1.MAP), &(pPackage1->MAP));
+                MoveValues(&(_canData1.RPM), &(pPackage1->RPM));
+                MoveValues(&(_canData1.TPS), &(pPackage1->TPS));
+                MoveValues(&(_canData1.VSPD), &(pPackage1->VSPD));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData1), (uint8_t*)(pPackage1), sizeof(_canData1));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_2: // Data2 decode and write to global data
+            DecodePackage2(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData2.AIN1),&(pPackage2->AIN1));
+                MoveValues(&(_canData2.AIN2),&(pPackage2->AIN2));
+                MoveValues(&(_canData2.AIN3),&(pPackage2->AIN3));
+                MoveValues(&(_canData2.AIN4),&(pPackage2->AIN4));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData2), (uint8_t*)(pPackage2), sizeof(_canData2));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_3: // Data3 decode and write to global data
+            DecodePackage3(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData3.BARO),&(pPackage3->BARO));
+                MoveValues(&(_canData3.CLT),&(pPackage3->CLT));
+                MoveValues(&(_canData3.FUELP),&(pPackage3->FUELP));
+                MoveValues(&(_canData3.GPS_Speed),&(pPackage3->GPS_Speed));
+                MoveValues(&(_canData3.OILP),&(pPackage3->OILP));
+                MoveValues(&(_canData3.OILT),&(pPackage3->OILT));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData3), (uint8_t*)(pPackage3), sizeof(_canData3));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_4: // Data4 decode and write to global data
+            DecodePackage4(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData4.AFR),&(pPackage4->AFR));
+                MoveValues(&(_canData4.Dwell),&(pPackage4->Dwell));
+                MoveValues(&(_canData4.EGT_1),&(pPackage4->EGT_1));
+                MoveValues(&(_canData4.EGT_2),&(pPackage4->EGT_2));
+                MoveValues(&(_canData4.Ign_Angle),&(pPackage4->Ign_Angle));
+                MoveValues(&(_canData4.Lambda),&(pPackage4->Lambda));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData4), (uint8_t*)(pPackage4), sizeof(_canData4));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_5: // Data5 decode and write to global data
+            DecodePackage5(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData5.Battery), &(pPackage5->Battery));
+                MoveValues(&(_canData5.ECU_Temp), &(pPackage5->ECU_Temp));
+                MoveValues(&(_canData5.Gear), &(pPackage5->Gear));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData5), (uint8_t*)(pPackage5), sizeof(_canData5));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_6: // Data6 decode and write to global data
+            DecodePackage6(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData6.DBW_Pos),&(pPackage6->DBW_Pos));
+                MoveValues(&(_canData6.DBW_Target),&(pPackage6->DBW_Target));
+                MoveValues(&(_canData6.PIT_TRQ_REDU),&(pPackage6->PIT_TRQ_REDU));
+                MoveValues(&(_canData6.TC_DRPM),&(pPackage6->TC_DRPM));
+                MoveValues(&(_canData6.TC_DRPM_RAW),&(pPackage6->TC_DRPM_RAW));
+                MoveValues(&(_canData6.TC_TORQ_REDU),&(pPackage6->TC_TORQ_REDU));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData6), (uint8_t*)(pPackage6), sizeof(_canData6));
+            #endif
+            break;
+
+        case MYCAN_CAN_ID_7: // Data7 decode and write to global data
+            DecodePackage7(pDataFromCan->arrData);
+
+            #ifdef SEPARATE_COPY
+                MoveValues(&(_canData7.AIN5), &(pPackage7->AIN5));
+                MoveValues(&(_canData7.AIN6), &(pPackage7->AIN6));
+                MoveValues(&(_canData7.OUT_FLAG1), &(pPackage7->OUT_FLAG1));
+                MoveValues(&(_canData7.OUT_FLAG2), &(pPackage7->OUT_FLAG2));
+                MoveValues(&(_canData7.OUT_FLAG3), &(pPackage7->OUT_FLAG3));
+                MoveValues(&(_canData7.OUT_FLAG4), &(pPackage7->OUT_FLAG4));
+            #endif
+
+            #ifndef SEPARATE_COPY
+                MoveData((uint8_t*)(&_canData7), (uint8_t*)(pPackage7), sizeof(_canData7));
+            #endif
+            break;
+        
+        default:
+            break;
+    }
+}
+//=========================================================================
+
+/**************************************************************************/
+/*!
+   @brief   CAN communication procedure used referance to MCP_CAN class 
+   @param   refMcpCan Reference to MCP_CAN class
+   @param   pCanData Pointer of type (CAN_data_t*)
+   @return  void
+   @note    This function decodes CAN data to global structure
+*/
+/*
+void ReadCanDataBy_MCP_CAN(MCP_CAN& refMcpCan, CAN_data_t* pCanData)
+{ 
+  byte tLen;
+  byte* pBuffer; 
+
+  if(CAN_MSGAVAIL != refMcpCan.checkReceive()) 
+  { // Data is not recieved
+    // Error code is assigned
+    pCanData->ID = (unsigned long)(-1);
+  }
+  else
+  { // Data is recieved
+    tLen    = CAN_DATA_MAX_LEN;
+    pBuffer = (byte*)(pCanData->arrData);
+
+    refMcpCan.readMsgBuf(&tLen, pBuffer);
+    pCanData->ID = refMcpCan.getCanId();
+  }
+}
+*/
+//=========================================================================

@@ -1,0 +1,73 @@
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SPITFT_Macros.h>
+#include <Adafruit_SPITFT.h>
+#include <gfxfont.h>
+#include <Adafruit_SSD1306.h>
+#include <splash.h>
+#include <SPI.h>
+#include <Wire.h>
+/*************************************************************************************
+*   Macros and definitions
+**************************************************************************************/
+#define MY_DISP_RES       0x07U                 //  D5 - GPIO7 (Display Reset)
+#define MY_CP5            0x05U                 //  CP5 (Reserve)- GPIO6
+#define MY_CP6            0x06U
+
+#define MY_ENC_IN_BUTTON  0x02U
+#define MY_ENC_IN_A       0x03U
+#define MY_ENC_IN_B       0x04U
+
+#define MY_SPI_CS_PIN     0x0AU
+#define MY_LED_PIN        0x02U
+
+#define MY_SCR_ID_MIN_NUM 0x01U
+#define MY_SCR_ID_MAX_NUM 0x05U
+#define MY_SCR_ID_PARAMET 0x05U
+
+uint8_t i, size1, size2, x1, y1, x2, y2;
+Adafruit_SSD1306  AdafruitLCDDisplay(0x80, 0x40, &Wire, 0x07);
+//====================================================================================
+void setup()
+{ 
+  // Ditial Input init
+  pinMode(MY_CP6, INPUT); // CP5 (Reserve)- GPIO6
+  pinMode(MY_CP5, INPUT); // CP6 - (SW switch) GPIO5
+  pinMode(MY_DISP_RES, INPUT);  //  D5 - GPIO7 (Display Reset)
+  pinMode(MY_ENC_IN_BUTTON, INPUT);
+  pinMode(MY_ENC_IN_A, INPUT);
+  pinMode(MY_ENC_IN_B, INPUT);
+
+  Serial.begin(9600);
+  if(!AdafruitLCDDisplay.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  { // c or d
+    AdafruitLCDDisplay.println(F("SSD1306 allocation failed"));
+    while(true)
+    {
+      ;// Don't proceed, loop forever
+    }
+  }
+  else
+  { // Initialize OK 
+    AdafruitLCDDisplay.setTextColor(SSD1306_WHITE);
+    AdafruitLCDDisplay.clearDisplay();
+  }
+  i = 0xFF;
+}
+
+void loop()
+{
+  delay(1000);
+  size1 = 1;     size2 = 4;
+  x1 = 4;        y1 = 2;
+  x2 = 42;       y2 = 3;
+  i++;
+  AdafruitLCDDisplay.clearDisplay();
+  AdafruitLCDDisplay.setTextSize(size1);
+  AdafruitLCDDisplay.setCursor(x1, y1);
+  AdafruitLCDDisplay.println(F("SPEED"));
+  AdafruitLCDDisplay.setTextSize(size2);
+  AdafruitLCDDisplay.setCursor(x2, y2);
+  AdafruitLCDDisplay.println(i);
+  AdafruitLCDDisplay.display();
+} 

@@ -1,0 +1,873 @@
+#include "MyLCD.h"
+
+/********************************************************************************************************************************************
+   @brief   Class constructor
+   @param   inRefMyDisplay Reference to LCD display class
+   @param   inRefLcdEncInterface Reference to LCD and ENC interface
+   @param   inRefPackage1 Reference to decoded CAN data1 structure
+   @param   inRefPackage2 Reference to decoded CAN data2 structure
+   @param   inRefPackage3 Reference to decoded CAN data3 structure
+   @param   inRefPackage4 Reference to decoded CAN data4 structure
+   @param   inRefPackage5 Reference to decoded CAN data5 structure
+   @param   inRefPackage6 Reference to decoded CAN data6 structure
+   @param   inRefPackage7 Reference to decoded CAN data7 structure
+   @note    This class is conected to intialized LCD object
+*/
+DisplayCanOnLcd::DisplayCanOnLcd(Adafruit_SSD1306& inRefMyDisplay, LCD_ENC_interface_t& inRefLcdEncInterface, CanData1_t& inRefPackage1, CanData2_t& inRefPackage2, CanData3_t& inRefPackage3, CanData4_t& inRefPackage4, CanData5_t& inRefPackage5, CanData6_t& inRefPackage6, CanData7_t& inRefPackage7):
+    RefMyDisplay(inRefMyDisplay),
+    refLcdEncInterface(inRefLcdEncInterface),
+    refPackage1(inRefPackage1),
+    refPackage2(inRefPackage2),
+    refPackage3(inRefPackage3),
+    refPackage4(inRefPackage4),
+    refPackage5(inRefPackage5),
+    refPackage6(inRefPackage6),
+    refPackage7(inRefPackage7)
+{;}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief    Class deconstructor
+   @param    void 
+*/
+DisplayCanOnLcd::~DisplayCanOnLcd(void)
+{;}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays RPM parameters
+   @param   refMyData Reference to CanData1_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsRPM(int16_t inRPM, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x01:
+            size1 = 01; size2 = 02;
+            x1 = 04;    y1 = 54;
+            x2 = 42;    y2 = 40;
+            break;
+
+        case 0x03:
+            size1 = 01; size2 = 02;
+            x1 = 04;    y1 = 04;
+            x2 = 45;    y2 = 03;
+            break;
+        
+        default:
+            return;
+    }
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("RPM"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inRPM);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays IAT parameters
+   @param   refMyData Reference to CanData1_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsIAT(int16_t inIAT, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 01; size2 = 01;   
+            x1 = 04;    y1 = 21;
+            x2 = 28;    y2 = 21;
+            break;
+        
+        default:
+            return;
+    }
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("IAT"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println("-");
+    RefMyDisplay.setCursor(x2 + 6, y2);
+    RefMyDisplay.println(inIAT);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays TPS parameters
+   @param   inTPS Data with TPS
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsTPS(int16_t inTPS, uint8_t ID)
+{
+    const uint8_t MY_SCREEN_WIDTH = 89;
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 04:
+            size1 = 01;     size2 = 01;
+            x1 = 04;        y1 = 53;
+            x2 = 38;        y2 = 53;
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("TPS"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println(inTPS);
+            break;
+
+        case 99:
+            size1 = 01;     size2 = 01;
+            x1 = 04;        y1 = 00;
+            x2 = 38;        y2 = 53;
+
+            int16_t tInt;
+            float   tFloat;
+            tFloat = (inTPS / inTPS);
+            tInt = (int16_t)(tFloat / MY_SCREEN_WIDTH);
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("TPS"));
+            RefMyDisplay.drawLine(25, 0, LCD_SCREEN_WIDTH - 13, 0, WHITE); //
+            RefMyDisplay.drawLine(25, 1, tInt, 1, WHITE);
+            RefMyDisplay.drawLine(25, 2, tInt, 2, WHITE);
+            RefMyDisplay.drawLine(25, 3, tInt, 3, WHITE);
+            RefMyDisplay.drawLine(25, 4, tInt, 4, WHITE);
+            RefMyDisplay.drawLine(25, 5, LCD_SCREEN_WIDTH - 13, 5, WHITE); //
+            RefMyDisplay.setCursor(x1 + 115, y1);
+            RefMyDisplay.println(F("%"));
+            RefMyDisplay.drawLine(115, 0, 115, 5, WHITE);
+            break;
+        
+        default:
+            return;
+    }
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays MAP parameters
+   @param   refMyData Reference to CanData1_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsMAP(int16_t inMAP, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 04:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 5;
+            x2 = 38;       y2 = 5;
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("MAP"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println(inMAP);
+            break;
+        
+        default:
+            return;
+    }
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays AIN1 parameters
+   @param   refMyData Reference to CanData2_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsAIN1(int16_t inATN1, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 99:
+            size1 = 01;     size2 = 01;
+            x1 = 04;        y1 = 05;
+            x2 = 50;        y2 = 05;
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("MAP:"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println(inATN1);
+            break;
+        
+        default:
+            return;
+    } 
+    RefMyDisplay.display();
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays VSPD parameters
+   @param   inVSPD Reference to CanData1_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsVSPD(int16_t inVSPD, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)// Prepare display for certain ID
+    {
+        case 01:
+            size1 = 1;     size2 = 2;
+            x1 = 4;        y1 = 2;
+            x2 = 42;       y2 = 3;
+            break;
+
+        case 05:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 5;
+            x2 = 50;        y2 = 5;
+            break;
+        
+        default:
+            return;
+    }   
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("SPEED"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inVSPD);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays OILT parameters
+   @param   inOILT Reference to CanData3_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsOILT(int16_t inOILT, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 02:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 25;
+            x2 = 50;        y2 = 25;
+            break;
+
+        case 05:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 5;
+            x2 = 50;       y2 = 5;
+            break;
+        
+        default:
+            return;
+    }  
+
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("OIL"));
+    RefMyDisplay.setCursor(x1, y1 + 8);
+    RefMyDisplay.println(F("TEMP"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inOILT);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays OILP parameters
+   @param   inOILP Reference to CanData3_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsOILP(int16_t inOILP, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x02:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 4;
+            x2 = 50;       y2 = 4;
+            break;
+
+        case 0x03:
+            size1 = 1;     size2 = 1;
+            x1 = 4;        y1 = 31;
+            x2 = 6;        y2 = 44;
+            break;
+        
+        default:
+            return;
+    }  
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("OIL"));
+    RefMyDisplay.setCursor(x1, y1 + 8);
+    RefMyDisplay.println(F("PRES"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inOILP, 1);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays FUELP parameters
+   @param   inFUELP Reference to CanData3_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsFUELP(int16_t inFUELP, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x03:
+            size1 = 1;      size2 = 1;
+            x1 = 69;        y1 = 31;
+            x2 = 70;        y2 = 44;
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("FUEL PRES"));
+            RefMyDisplay.setCursor(x2 + 47, y2 + 7);
+            RefMyDisplay.println(F("b"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println(inFUELP, 1);
+            break;
+
+        case 0x63:
+            size1 = 1;      size2 = 1;
+            x1 = 4;         y1 = 5;
+            x2 = 50;        y2 = 5;
+            break;
+        
+        default:
+            return;
+    }    
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays CLT parameters
+   @param   inCLT Reference to CanData3_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsCLT(int16_t inCLT, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    uint16_t tInt1;
+    // dla uint16_t max to 0xFFFF lub (uint16_t)(-1)
+    // dla int16_t  max to 0x1FFF
+    switch (ID)
+    {
+        case 0x02:
+            size1 = 1;      size2 = 1;
+            x1 = 04;        y1 = 46;
+            x2 = 50;        y2 = 46;
+
+            tInt1 = inCLT;
+            if(tInt1 > 0x1FFF)  
+                tInt1 = (0xFFFF - tInt1); // ABS(x)
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("WATER"));
+            RefMyDisplay.setCursor(x1, y1 + 8);
+            RefMyDisplay.println(F("TEMP"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println("-");
+            RefMyDisplay.setCursor(x2 + 6, y2);
+            RefMyDisplay.println(tInt1);
+            break;
+
+        case 0x0C:
+            size1 = 1;      size2 = 2;
+            x1 = 4;         y1 = 46;
+            x2 = 50;        y2 = 46;
+
+            tInt1 = inCLT;
+
+            RefMyDisplay.setTextSize(size1);
+            RefMyDisplay.setCursor(x1, y1);
+            RefMyDisplay.println(F("WATER"));
+            RefMyDisplay.setCursor(x1, y1 + 8);
+            RefMyDisplay.println(F("TEMP"));
+            RefMyDisplay.setTextSize(size2);
+            RefMyDisplay.setCursor(x2, y2);
+            RefMyDisplay.println(tInt1);
+            break;
+        
+        default:
+            return;
+    }   
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays lambda sensor parameters
+   @param   inLAMBDA Reference to CanData4_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsLAMBDA(int16_t inLAMBDA, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 1;      size2 = 1;
+            x1 = 69;        y1 = 37;
+            x2 = 98;        y2 = 37;
+            break;
+        
+        default:
+            return;
+    } 
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("LAMB"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inLAMBDA, 2);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays AFR parameters
+   @param   inAFR Reference to CanData4_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsAFR(int16_t inAFR, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 1;      size2 = 1;
+            x1 = 69;        y1 = 53;
+            x2 = 98;        y2 = 53;
+            break;
+        
+        default:
+            return;
+    }   
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("AFR"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inAFR, 1);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays EGT1 parameters
+   @param   inEGT1 Reference to CanData4_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsEGT1(int16_t inEGT1, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 1;      size2 = 1;
+            x1 = 69;        y1 = 5;
+            x2 = 98;        y2 = 5;
+            break;
+        
+        default:
+            return;
+    }    
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("EGT1"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inEGT1);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays EGT2 parameters
+   @param   inEGT2 Reference to CanData4_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsEGT2(int16_t inEGT2, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 1;      size2 = 1;
+            x1 = 69;        y1 = 21;
+            x2 = 98;        y2 = 21;
+            break;
+        
+        default:
+            return;
+    }    
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("EGT2"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inEGT2);
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Subrutine that displays battery parameters
+   @param   refMyData Reference to CanData5_t can data structure
+   @param   ID Display ID
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParamsBATT(int16_t inBATT, uint8_t ID)
+{
+    uint8_t size1, size2, x1, y1, x2, y2;
+    switch (ID)
+    {
+        case 0x04:
+            size1 = 1;      size2 = 1;
+            x1 = 4;         y1 = 37;
+            x2 = 36;        y2 = 37;
+            break;
+        
+        default:
+            return;
+    }
+    RefMyDisplay.setTextSize(size1);
+    RefMyDisplay.setCursor(x1, y1);
+    RefMyDisplay.println(F("BATT"));
+    RefMyDisplay.setTextSize(size2);
+    RefMyDisplay.setCursor(x2, y2);
+    RefMyDisplay.println(inBATT, 1);  
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Uniwersal display for all parameters
+   @param   const String &name String constant to display.
+   @param   inParam Parameter value.
+   @param   inX
+   @param   inY
+   @param   inSize Size of text to display
+   @return  void
+   @note    Asign certain parameters of text and data display
+*/
+void DisplayCanOnLcd::SetDisplayParameter(const String &name, int16_t inParam, uint8_t inX, uint8_t inY, uint8_t inSize)
+{
+    if((inX > 3) || (inY > 1) ) 
+    {   return;}
+
+    inX = 5 + (inX * 16);
+    inY = 4 + (inY * 65);
+    RefMyDisplay.setTextSize(inSize);
+    RefMyDisplay.setCursor(inX, inY);
+    RefMyDisplay.println(name);
+
+    inX = inX + 24;
+    inY = inY + 0;
+    RefMyDisplay.setTextSize(inSize);
+    RefMyDisplay.setCursor(inX, inY);
+    RefMyDisplay.println(inParam, 1); 
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Display normal parameters that is read from CAN buss 
+   @param   inScreen
+   @return  void
+   @note    Need to be called in setings mode display
+*/
+void DisplayCanOnLcd::CallDisplayScreens(uint8_t inScreen)
+{
+    uint8_t tDisplayed; 
+    //tDisplayed = refLcdEncInterface.numberOfScreen;
+    tDisplayed = inScreen;
+
+    // Clear LCD before send some data
+    RefMyDisplay.clearDisplay();
+    // Setting data for display
+    switch (tDisplayed)
+    {
+    case 0x01: // First screen display
+        //SetLinesForScr1();
+        SetDisplayParamsVSPD(refPackage1.VSPD.value, tDisplayed);
+        SetDisplayParamsRPM(refPackage1.RPM.value, tDisplayed);
+        break;
+
+    case 0x02: // Second screen display
+        //SetLinesForScr2();
+        SetDisplayParamsOILP(refPackage3.OILP.value, tDisplayed);
+        SetDisplayParamsOILT(refPackage3.OILT.value, tDisplayed);
+        SetDisplayParamsCLT(refPackage3.CLT.value, tDisplayed);  
+        break;
+
+    case 0x03: // third screen display
+        //SetLinesForScr3();
+        SetDisplayParamsRPM(refPackage1.RPM.value, tDisplayed);
+        SetDisplayParamsOILP(refPackage3.OILP.value, tDisplayed);
+        SetDisplayParamsFUELP(refPackage3.FUELP.value, tDisplayed); 
+        break;
+
+    case 0x04:
+        //SetLinesForScr4();
+        SetDisplayParamsMAP(refPackage1.MAP.value, tDisplayed);
+        SetDisplayParamsIAT(refPackage1.IAT.value, tDisplayed);
+        SetDisplayParamsBATT(refPackage5.Battery.value, tDisplayed);
+        SetDisplayParamsTPS(refPackage1.TPS.value, tDisplayed);
+        SetDisplayParamsEGT1(refPackage4.EGT_1.value, tDisplayed);
+        SetDisplayParamsEGT2(refPackage4.EGT_2.value, tDisplayed);
+        SetDisplayParamsLAMBDA(refPackage4.Lambda.value, tDisplayed);
+        SetDisplayParamsAFR(refPackage4.AFR.value, tDisplayed); 
+        break;
+
+    default: 
+        return;
+    }
+    // Print prepared data
+    RefMyDisplay.display(); 
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief   Need to be called in settings display mode 
+   @param   void 
+   @return  void
+   @note    Parameters to change is displayed
+*/
+void DisplayCanOnLcd::CallDisplaySettings(void)
+{
+    int16_t tValue,tValMin, tValMax;
+
+    RefMyDisplay.setTextSize(1);
+    RefMyDisplay.setCursor(10, 1);
+    RefMyDisplay.println(F("limit settings:"));
+    RefMyDisplay.setCursor(120, 1);
+    RefMyDisplay.println(refLcdEncInterface.numberOfParametr);
+    RefMyDisplay.setCursor(6, 38);
+    RefMyDisplay.println(F("min"));
+    RefMyDisplay.setCursor(66, 38);
+    RefMyDisplay.println(F("max"));
+
+    //editMode =0 - possible to move back
+    //editMode =1 - mark parameter
+    //editMode =2 - mark min parameter
+    //editMode =3 - mark max parameter
+    switch (refLcdEncInterface.limitValuesOfparametr)
+    {
+    case MY_LCD_MOVE_BACK:
+        break;
+
+    case MY_LCD_MARK_PARAM:
+        RefMyDisplay.drawLine(2, 12, 127, 12, WHITE);
+        RefMyDisplay.drawLine(2, 12, 2, 33, WHITE);
+        RefMyDisplay.drawLine(2, 33, 127, 33, WHITE);
+        RefMyDisplay.drawLine(127, 12, 127, 33, WHITE);
+        break;
+    
+    case MY_LCD_MARK_MIN:
+        RefMyDisplay.drawLine(2, 35, 60, 35, WHITE);
+        RefMyDisplay.drawLine(2, 35, 2, 63, WHITE);
+        RefMyDisplay.drawLine(2, 63, 60, 63, WHITE);
+        RefMyDisplay.drawLine(60, 35, 60, 63, WHITE);
+        break;
+
+    case MY_LCD_MARK_MAX:
+        RefMyDisplay.drawLine(62, 35, 127, 35, WHITE);
+        RefMyDisplay.drawLine(62, 35, 62, 63, WHITE);
+        RefMyDisplay.drawLine(62, 63, 127, 63, WHITE);
+        RefMyDisplay.drawLine(127, 35, 127, 63, WHITE);
+        break;
+
+    default:
+        if(refLcdEncInterface.limitValuesOfparametr > MY_LCD_MARK_MAX)
+        {   refLcdEncInterface.limitValuesOfparametr = MY_LCD_MARK_PARAM;}
+        break;
+    }
+
+    // parameter_id =
+    if((refLcdEncInterface.numberOfParametr >= MY_LCD_NUMBER_OF_PAREMETER_FIRST) && (refLcdEncInterface.numberOfParametr <= MY_LCD_NUMBER_OF_PAREMETER_LAST))
+    {
+        RefMyDisplay.setTextSize(1);
+        RefMyDisplay.setCursor(6, 16); //min Value
+    }
+    else
+    {// Data from Wheal menu menagment difrent that display settings
+        if(refLcdEncInterface.numberOfParametr > MY_LCD_NUMBER_OF_PAREMETER_LAST)
+        {   refLcdEncInterface.numberOfParametr = MY_LCD_NUMBER_OF_PAREMETER_LAST;}
+        else if(refLcdEncInterface.numberOfParametr < MY_LCD_NUMBER_OF_PAREMETER_FIRST)
+        {   refLcdEncInterface.numberOfParametr = MY_LCD_NUMBER_OF_PAREMETER_FIRST;}
+        else{;}
+
+        return;
+    }
+    switch (refLcdEncInterface.numberOfParametr)
+    {
+    case 0x01: // OILP;
+        RefMyDisplay.println(F("OILP"));
+        tValue  = refPackage3.OILP.value;
+        tValMin = refPackage3.OILP.min;
+        tValMax = refPackage3.OILP.max;
+        break;
+
+    case 0x02: // OILT;
+        RefMyDisplay.println(F("OILT"));
+        tValue  = refPackage3.OILT.value;
+        tValMin = refPackage3.OILT.min;
+        tValMax = refPackage3.OILT.max;
+        break;
+
+    case 0x03: // CLT;
+        RefMyDisplay.println(F("CLT"));
+        tValue  = refPackage3.CLT.value;
+        tValMin = refPackage3.CLT.min;
+        tValMax = refPackage3.CLT.max;
+        break;
+
+    case 0x04: // FUELP;
+        RefMyDisplay.println(F("FUELP"));
+        tValue  = refPackage3.FUELP.value;
+        tValMin = refPackage3.FUELP.min;
+        tValMax = refPackage3.FUELP.max;
+        break;
+
+    default: 
+        return;
+    }
+    RefMyDisplay.setTextSize(2);
+    RefMyDisplay.setCursor(60, 16); //min Value
+    RefMyDisplay.println(tValue, 1);
+
+    RefMyDisplay.setTextSize(1);
+    RefMyDisplay.setCursor(6, 50); //min Value
+    RefMyDisplay.println(tValMin, 1);
+    RefMyDisplay.setCursor(66, 50); //max Value
+    RefMyDisplay.println(tValMax, 1);
+    RefMyDisplay.display();
+}
+//===========================================================================================================================================
+
+/********************************************************************************************************************************************
+   @brief       Print line for screen 1
+   @param[in]   void
+   @return      void
+   @note        Prepare screen
+*/
+void DisplayCanOnLcd::SetLinesForScr1(void)
+{
+    return;
+}
+//===========================================================================================================================================
+/********************************************************************************************************************************************
+   @brief       Print line for screen 1
+   @param[in]   void
+   @return      void
+   @note        Prepare screen
+*/
+void DisplayCanOnLcd::SetLinesForScr2(void)
+{
+    // X
+    RefMyDisplay.drawLine(0, 0, LCD_SCREEN_WIDTH, 0, WHITE);                                                                                         // TOP Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), WHITE); // 2nd  Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), WHITE);                 // 3rd Line
+    RefMyDisplay.drawLine(0, LCD_SCREEN_HEIGHT - 1, LCD_SCREEN_WIDTH, LCD_SCREEN_HEIGHT - 1, WHITE);                                                         // Bottom Line
+    // Y
+    RefMyDisplay.drawLine(0, 0, 0, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH - 1, 0, LCD_SCREEN_WIDTH - 1, LCD_SCREEN_HEIGHT, WHITE);
+}
+//===========================================================================================================================================
+/********************************************************************************************************************************************
+   @brief       Print line for screen 1
+   @param[in]   void
+   @return      void
+   @note        Prepare screen
+*/
+void DisplayCanOnLcd::SetLinesForScr3(void)
+{
+    // X
+    RefMyDisplay.drawLine(0, 0, LCD_SCREEN_WIDTH, 0, WHITE);                                 // TOP Line
+    RefMyDisplay.drawLine(0, 27, LCD_SCREEN_WIDTH, 27, WHITE);                               // 2nd  Line
+    RefMyDisplay.drawLine(0, LCD_SCREEN_HEIGHT - 1, LCD_SCREEN_WIDTH, LCD_SCREEN_HEIGHT - 1, WHITE); // Bottom Line
+    // Y
+    RefMyDisplay.drawLine(0, 0, 0, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(64, 27, 64, 64, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH - 1, 0, LCD_SCREEN_WIDTH - 1, LCD_SCREEN_HEIGHT, WHITE);
+}
+//===========================================================================================================================================
+/********************************************************************************************************************************************
+   @brief       Print line for screen 1
+   @param[in]   void
+   @return      void
+   @note        Prepare screen
+*/
+void DisplayCanOnLcd::SetLinesForScr4(void)
+{
+    // X
+    RefMyDisplay.drawLine(0, 0, LCD_SCREEN_WIDTH, 0, WHITE);                                                                                         // TOP Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), WHITE); // 2nd  Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), WHITE);                 // 3rd Line
+    RefMyDisplay.drawLine(0, LCD_SCREEN_HEIGHT - 1, LCD_SCREEN_WIDTH, LCD_SCREEN_HEIGHT - 1, WHITE);                                                         // Bottom Line
+    // Y
+    RefMyDisplay.drawLine(0, 0, 0, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH / 2, 0, LCD_SCREEN_WIDTH / 2, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH - 1, 0, LCD_SCREEN_WIDTH - 1, LCD_SCREEN_HEIGHT, WHITE);
+}
+//===========================================================================================================================================
+/********************************************************************************************************************************************
+   @brief       Print line for screen 1
+   @param[in]   void
+   @return      void
+   @note        Prepare screen
+*/
+void DisplayCanOnLcd::SetLinesForScr5(void)
+{
+    // X
+    RefMyDisplay.drawLine(0, 0, LCD_SCREEN_WIDTH, 0, WHITE);                                                                                         // TOP Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - 2 * (LCD_SCREEN_HEIGHT / 3) - 1), WHITE); // 2nd  Line
+    RefMyDisplay.drawLine(0, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), LCD_SCREEN_WIDTH, (LCD_SCREEN_HEIGHT - (LCD_SCREEN_HEIGHT / 3)), WHITE);                 // 3rd Line
+    RefMyDisplay.drawLine(0, LCD_SCREEN_HEIGHT - 1, LCD_SCREEN_WIDTH, LCD_SCREEN_HEIGHT - 1, WHITE);                                                         // Bottom Line
+    // Y
+    RefMyDisplay.drawLine(0, 0, 0, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH / 2, 0, LCD_SCREEN_WIDTH / 2, LCD_SCREEN_HEIGHT, WHITE);
+    RefMyDisplay.drawLine(LCD_SCREEN_WIDTH - 1, 0, LCD_SCREEN_WIDTH - 1, LCD_SCREEN_HEIGHT, WHITE);
+}
+//===========================================================================================================================================

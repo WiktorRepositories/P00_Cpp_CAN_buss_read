@@ -1,0 +1,83 @@
+#include <stdint.h>
+#include "MyCAN_v2.h"
+#include "MyLCD_v3.h"
+
+#ifndef _MY_ENC_H
+#define _MY_ENC_H
+
+// Button and encoder configuration
+#define ENC_IN_BUTTON     0x02U
+#define ENC_IN_A          0x03U
+#define ENC_IN_B          0x04U
+
+/*************************************************************************************
+*   My macros and definitions
+**************************************************************************************/
+// Configuration
+#define MY_ENC_TIME_LONGPRESS 123   // * (~16,32ms) ~= 1s
+#define MY_ENC_TIME_DEBOUNCE  5     // * (~16,32ms) ~= 86ms
+//====================================================================================
+
+/*************************************************************************************
+ * @name    RottaryButton
+ * @brief   Screen menegment and parameters edit.
+ * @note    This class is using references to existing structures.
+*/
+class RottaryButton
+{
+private:
+/**************************************************************
+* Private macro definition
+***************************************************************/
+    #define _ENC_STATE_RESET      0x00U
+    #define _ENC_STATE_STABLEOFF  0x11U
+    #define _ENC_STATE_RISING     0x22U
+    #define _ENC_STATE_ON_DB      0x33U
+    #define _ENC_STATE_STABLEON   0x44U
+    #define _ENC_STATE_FALLING    0x55U
+    #define _ENC_STATE_OFF_DB     0x66U
+    #define _ENC_STATE_LONGPRSS   0x77U
+    #define _ENC_MODE_READ        0x88U
+    #define _ENC_MODE_WRITE       0x99U
+
+    #define _MODE_MENAG_READ  0x11
+    #define _MODE_MENAG_WRITE 0x22
+
+    #define _ENC_PARAM_SWIPETHROUGHT    0x11
+
+/**************************************************************
+* Private data for aplication
+***************************************************************/
+    LCD_ENC_interface_t& refLcdEncInterface;    // Reference to interface data
+
+    uint8_t firstScreenID;
+    uint8_t lastScreenID;
+    uint8_t currentID;
+    uint8_t paramScrNum;
+    bool    exitEdit;
+
+    uint8_t buttonDebounceDelay;
+    uint8_t buttonLongPress;
+//=============================================================
+
+public:
+/**************************************************************
+* Class constructor and deconstructor
+***************************************************************/
+    RottaryButton(LCD_ENC_interface_t& lcdEncInterface, uint8_t inFirstScr, uint8_t inLastScr, uint8_t inParScrNum);
+    ~RottaryButton(void); // Decontructor
+//=============================================================
+
+    uint8_t WheelRotation(uint8_t& refInA, uint8_t& refInB);
+    uint8_t ButtonDebounce(uint8_t inButton);
+    uint8_t ModeMenagment(uint8_t inbutton, uint8_t inPressType);
+
+    void ScreanMenagment(uint8_t inRotDir, bool inButton);
+    void ParametersMenagment(uint8_t inRotDir, uint8_t inButton);
+
+    void InterruptCall(uint8_t inA, uint8_t inB, uint8_t inButt);
+//=============================================================
+};
+
+//====================================================================================
+#endif // _MY_ENC_H
